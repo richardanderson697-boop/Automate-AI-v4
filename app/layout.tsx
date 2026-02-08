@@ -6,6 +6,7 @@ import './globals.css'
 const _geist = Geist({ subsets: ['latin'] })
 const _geistMono = Geist_Mono({ subsets: ['latin'] })
 
+// AI-powered auto repair diagnostic platform v0.3.1
 export const metadata: Metadata = {
   title: 'A Full Service Auto - AI Diagnostic Platform',
   description: 'AI-powered auto repair diagnostics with RAG enhancement, shop integrations, and customer portal',
