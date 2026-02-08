@@ -113,12 +113,16 @@ export async function POST(request: NextRequest) {
     }
 
     try {
+      console.log('[v0] Calling AI diagnosis with:', { description: enrichedDescription, vehicleYear, vehicleMake, vehicleModel })
+      console.log('[v0] GEMINI_API_KEY available:', !!process.env.GEMINI_API_KEY)
+      
       const vehicleInfo = { year: vehicleYear, make: vehicleMake, model: vehicleModel }
       const aiDiagnosis = await generateDiagnosis(enrichedDescription, vehicleInfo)
       diagnosis = aiDiagnosis
-      console.log('[v0] AI diagnosis generated successfully')
+      console.log('[v0] AI diagnosis generated:', diagnosis)
     } catch (diagnosisError) {
       console.error('[v0] AI diagnosis failed (using fallback):', diagnosisError)
+      console.error('[v0] Error stack:', diagnosisError instanceof Error ? diagnosisError.stack : 'No stack trace')
     }
 
     // Find educational videos (optional - don't fail if this errors)
