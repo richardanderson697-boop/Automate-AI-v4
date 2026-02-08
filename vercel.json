@@ -1,4 +1,0 @@
-{
-  "buildCommand": "rm -f pnpm-lock.yaml && pnpm install && pnpm run build",
-  "installCommand": "rm -f pnpm-lock.yaml && pnpm install"
-}
