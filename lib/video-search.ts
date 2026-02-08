@@ -1,9 +1,12 @@
 import { google } from 'googleapis'
 
-const youtube = google.youtube({
+// Check if YouTube API key is available
+const YOUTUBE_ENABLED = !!process.env.YOUTUBE_API_KEY
+
+const youtube = YOUTUBE_ENABLED ? google.youtube({
   version: 'v3',
   auth: process.env.YOUTUBE_API_KEY,
-})
+}) : null
 
 // Types
 export interface VideoResult {
@@ -37,6 +40,12 @@ export async function findEducationalVideos(
   symptoms: string[],
   vehicleInfo?: VehicleInfo
 ): Promise<VideoResult[]> {
+  // Return empty array if YouTube API is not configured
+  if (!YOUTUBE_ENABLED || !youtube) {
+    console.log('[v0] YouTube API not configured - skipping video search')
+    return []
+  }
+
   const queries = buildSearchQueries(diagnosis, symptoms, vehicleInfo)
 
   const videos = await Promise.all(
