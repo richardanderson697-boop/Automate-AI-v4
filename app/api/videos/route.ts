@@ -20,17 +20,20 @@ const videoRequestSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    // Check if YouTube API key is configured
+    // Check if YouTube API key is configured - gracefully return empty array if not
     if (!process.env.YOUTUBE_API_KEY) {
-      console.error('YouTube API key not configured')
-      return NextResponse.json(
-        {
-          error:
-            'Video search is not configured. Please add YOUTUBE_API_KEY to environment variables.',
-          videos: [],
+      console.log('[v0] YouTube API key not configured - returning empty results')
+      return NextResponse.json({
+        success: true,
+        videos: [],
+        categorized: {
+          symptom_explanation: [],
+          repair_walkthrough: [],
+          cost_breakdown: [],
+          prevention: [],
         },
-        { status: 503 }
-      )
+        total: 0,
+      })
     }
 
     // Parse and validate request body
@@ -93,10 +96,11 @@ export async function GET(req: NextRequest) {
 
   try {
     if (!process.env.YOUTUBE_API_KEY) {
-      return NextResponse.json(
-        { error: 'YouTube API key not configured' },
-        { status: 503 }
-      )
+      return NextResponse.json({
+        success: true,
+        videos: [],
+        query: { diagnosis, symptoms },
+      })
     }
 
     const videos = await findEducationalVideos(diagnosis, symptoms)
