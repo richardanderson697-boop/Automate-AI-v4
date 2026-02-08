@@ -23,6 +23,8 @@ export function CustomerRequestClient() {
     vehicleModel: '',
     description: '',
   })
+  const [imageFiles, setImageFiles] = useState<File[]>([])
+  const [audioFile, setAudioFile] = useState<File | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -30,11 +32,27 @@ export function CustomerRequestClient() {
 
     try {
       console.log('[v0] Submitting customer diagnostic request:', formData)
+      console.log('[v0] Files:', { images: imageFiles.length, audio: !!audioFile })
+      
+      // Create FormData for file uploads
+      const submitData = new FormData()
+      Object.entries(formData).forEach(([key, value]) => {
+        submitData.append(key, value)
+      })
+      
+      // Add image files
+      imageFiles.forEach((file, index) => {
+        submitData.append(`image`, file)
+      })
+      
+      // Add audio file
+      if (audioFile) {
+        submitData.append('audio', audioFile)
+      }
       
       const response = await fetch('/api/customer-diagnostics', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: submitData,
       })
 
       const data = await response.json()
@@ -126,6 +144,45 @@ export function CustomerRequestClient() {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Upload Photos (Optional)</Label>
+                <p className="text-xs text-muted-foreground">
+                  Photos of warning lights, leaks, or damaged parts help AI diagnose accurately
+                </p>
+                <Input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || [])
+                    setImageFiles(files)
+                    console.log('[v0] Images selected:', files.length)
+                  }}
+                />
+                {imageFiles.length > 0 && (
+                  <p className="text-sm text-green-600">{imageFiles.length} image(s) selected</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label>Record Audio (Optional)</Label>
+                <p className="text-xs text-muted-foreground">
+                  Record engine noises, squealing, knocking, or unusual sounds
+                </p>
+                <Input
+                  type="file"
+                  accept="audio/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null
+                    setAudioFile(file)
+                    console.log('[v0] Audio selected:', file?.name)
+                  }}
+                />
+                {audioFile && (
+                  <p className="text-sm text-green-600">Audio: {audioFile.name}</p>
+                )}
               </div>
 
               <Button type="submit" disabled={loading} className="w-full">

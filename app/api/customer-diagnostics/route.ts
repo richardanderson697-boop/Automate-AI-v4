@@ -6,13 +6,48 @@ export async function POST(request: NextRequest) {
   try {
     console.log('[v0] Customer diagnostics API called')
     
-    const body = await request.json()
-    console.log('[v0] Request body:', JSON.stringify(body))
+    const contentType = request.headers.get('content-type')
+    let customerName, customerEmail, customerPhone, vehicleYear, vehicleMake, vehicleModel, description
+    let imageFiles: File[] = []
+    let audioFile: File | null = null
+    
+    if (contentType?.includes('multipart/form-data')) {
+      // Handle FormData (with files)
+      const formData = await request.formData()
+      console.log('[v0] FormData received')
+      
+      customerName = formData.get('customerName') as string
+      customerEmail = formData.get('customerEmail') as string
+      customerPhone = formData.get('customerPhone') as string || ''
+      vehicleYear = parseInt(formData.get('vehicleYear') as string) || new Date().getFullYear()
+      vehicleMake = formData.get('vehicleMake') as string || 'Unknown'
+      vehicleModel = formData.get('vehicleModel') as string || 'Unknown'
+      description = formData.get('description') as string
+      
+      // Extract files
+      const images = formData.getAll('image')
+      imageFiles = images.filter(f => f instanceof File) as File[]
+      audioFile = formData.get('audio') as File | null
+      
+      console.log('[v0] Files received:', { images: imageFiles.length, audio: !!audioFile })
+    } else {
+      // Handle JSON (no files)
+      const body = await request.json()
+      console.log('[v0] JSON body received')
+      
+      customerName = body.customerName
+      customerEmail = body.customerEmail
+      customerPhone = body.customerPhone || ''
+      vehicleYear = parseInt(body.vehicleYear) || new Date().getFullYear()
+      vehicleMake = body.vehicleMake || 'Unknown'
+      vehicleModel = body.vehicleModel || 'Unknown'
+      description = body.description
+    }
     
     const supabase = await createClient()
 
     // Validate required fields
-    if (!body.customerName || !body.customerEmail || !body.description) {
+    if (!customerName || !customerEmail || !description) {
       console.log('[v0] Missing required fields')
       return NextResponse.json(
         { error: 'Missing required fields: name, email, and description are required' },
@@ -20,16 +55,54 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Extract customer and vehicle info from JSON
-    const customerName = body.customerName
-    const customerEmail = body.customerEmail
-    const customerPhone = body.customerPhone || ''
-    const vehicleYear = parseInt(body.vehicleYear) || new Date().getFullYear()
-    const vehicleMake = body.vehicleMake || 'Unknown'
-    const vehicleModel = body.vehicleModel || 'Unknown'
-    const description = body.description
-
     console.log('[v0] Processing diagnostic for:', { customerName, vehicleMake, vehicleModel })
+
+    // Upload files to Supabase Storage if present
+    const imageUrls: string[] = []
+    let audioUrl: string | null = null
+    
+    if (imageFiles.length > 0) {
+      console.log('[v0] Uploading', imageFiles.length, 'images to storage...')
+      for (const [index, file] of imageFiles.entries()) {
+        const fileName = `${Date.now()}_${index}_${file.name}`
+        const { data, error } = await supabase.storage
+          .from('diagnostic-media')
+          .upload(`images/${fileName}`, file)
+        
+        if (!error && data) {
+          const { data: { publicUrl } } = supabase.storage
+            .from('diagnostic-media')
+            .getPublicUrl(data.path)
+          imageUrls.push(publicUrl)
+        }
+      }
+      console.log('[v0] Uploaded', imageUrls.length, 'images successfully')
+    }
+    
+    if (audioFile) {
+      console.log('[v0] Uploading audio file to storage...')
+      const fileName = `${Date.now()}_${audioFile.name}`
+      const { data, error } = await supabase.storage
+        .from('diagnostic-media')
+        .upload(`audio/${fileName}`, audioFile)
+      
+      if (!error && data) {
+        const { data: { publicUrl } } = supabase.storage
+          .from('diagnostic-media')
+          .getPublicUrl(data.path)
+        audioUrl = publicUrl
+        console.log('[v0] Audio uploaded successfully')
+      }
+    }
+
+    // Build enriched description with media context for AI
+    let enrichedDescription = description
+    if (imageUrls.length > 0) {
+      enrichedDescription += `\n\n[Customer provided ${imageUrls.length} photo(s) of the issue]`
+    }
+    if (audioUrl) {
+      enrichedDescription += `\n[Customer provided audio recording of the issue]`
+    }
 
     // Generate AI diagnosis with fallback if it fails
     let diagnosis = {
@@ -41,7 +114,7 @@ export async function POST(request: NextRequest) {
 
     try {
       const vehicleInfo = { year: vehicleYear, make: vehicleMake, model: vehicleModel }
-      const aiDiagnosis = await generateDiagnosis(description, vehicleInfo)
+      const aiDiagnosis = await generateDiagnosis(enrichedDescription, vehicleInfo)
       diagnosis = aiDiagnosis
       console.log('[v0] AI diagnosis generated successfully')
     } catch (diagnosisError) {
@@ -81,9 +154,9 @@ export async function POST(request: NextRequest) {
         vehicle_year: vehicleYear,
         vehicle_make: vehicleMake,
         vehicle_model: vehicleModel,
-        symptoms_text: description, // Use correct column name
-        symptoms_image_urls: [], // Empty array for now
-        symptoms_audio_url: null,
+        symptoms_text: description,
+        symptoms_image_urls: imageUrls,
+        symptoms_audio_url: audioUrl,
         ai_diagnosis: { // Store as JSON object
           diagnosis: diagnosis.diagnosis,
           recommendedParts: diagnosis.recommendedParts,
