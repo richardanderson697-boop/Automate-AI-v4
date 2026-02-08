@@ -81,14 +81,18 @@ export async function POST(request: NextRequest) {
         vehicle_year: vehicleYear,
         vehicle_make: vehicleMake,
         vehicle_model: vehicleModel,
-        description: description,
-        image_url: null,
-        audio_data: null,
-        ai_diagnosis: diagnosis.diagnosis,
-        recommended_parts: diagnosis.recommendedParts,
-        estimated_cost: diagnosis.estimatedCost,
-        confidence_score: diagnosis.confidence,
-        educational_videos: videos,
+        symptoms_text: description, // Use correct column name
+        symptoms_image_urls: [], // Empty array for now
+        symptoms_audio_url: null,
+        ai_diagnosis: { // Store as JSON object
+          diagnosis: diagnosis.diagnosis,
+          recommendedParts: diagnosis.recommendedParts,
+          estimatedCost: diagnosis.estimatedCost,
+          confidence: diagnosis.confidence,
+          videos: videos,
+        },
+        ai_confidence: diagnosis.confidence,
+        estimated_total: diagnosis.estimatedCost,
         status: 'pending_review',
       })
       .select()
