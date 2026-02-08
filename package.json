@@ -3,7 +3,6 @@
   "version": "0.2.0",
   "private": true,
   "scripts": {
-    "preinstall": "rm -f node_modules && rm -rf node_modules || true",
     "dev": "next dev --turbo",
     "build": "next build",
     "start": "next start",
