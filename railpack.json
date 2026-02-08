@@ -1,7 +1,16 @@
 {
   "$schema": "https://schema.railpack.com",
-  "build": {
-    "aptPackages": ["libatomic1"],
-    "installCommand": "pnpm install --no-frozen-lockfile"
+  "steps": {
+    "setup": {
+      "commands": [
+        "apt-get update && apt-get install -y libatomic1"
+      ]
+    },
+    "install": {
+      "inputs": [{ "step": "setup" }],
+      "commands": [
+        "pnpm install --no-frozen-lockfile"
+      ]
+    }
   }
 }
