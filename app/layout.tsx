@@ -7,9 +7,8 @@ const _geist = Geist({ subsets: ['latin'] })
 const _geistMono = Geist_Mono({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.app',
+  title: 'A Full Service Auto - AI Diagnostic Platform',
+  description: 'AI-powered auto repair diagnostics with RAG enhancement, shop integrations, and customer portal',
 }
 
 export default function RootLayout({

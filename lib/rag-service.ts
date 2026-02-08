@@ -63,8 +63,12 @@ export async function generateDiagnosis(
   vehicleInfo?: { year: number; make: string; model: string }
 ): Promise<DiagnosisResult> {
   try {
+    console.log('[v0 RAG] Starting diagnosis generation')
+    console.log('[v0 RAG] GEMINI_API_KEY:', process.env.GEMINI_API_KEY ? 'Present' : 'MISSING')
+    
     // Retrieve relevant repair knowledge
     const context = await buildDiagnosticContext(symptoms, vehicleInfo)
+    console.log('[v0 RAG] Context retrieved, length:', context.length)
 
     const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' })
 
@@ -93,16 +97,20 @@ Respond in JSON format:
   "confidence": 85
 }`
 
+    console.log('[v0 RAG] Calling Gemini API...')
     const result = await model.generateContent(prompt)
     const responseText = result.response.text()
+    console.log('[v0 RAG] Gemini response received, length:', responseText.length)
 
     // Extract JSON from response (may be wrapped in markdown)
     const jsonMatch = responseText.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {
+      console.error('[v0 RAG] Failed to extract JSON from response:', responseText)
       throw new Error('Failed to parse AI response')
     }
 
     const diagnosis = JSON.parse(jsonMatch[0])
+    console.log('[v0 RAG] Parsed diagnosis successfully')
 
     return {
       diagnosis: diagnosis.diagnosis || 'Unable to determine',
