@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { generateDiagnosis } from '@/lib/rag-service'
-import { searchVideos } from '@/lib/video-search'
+import { findEducationalVideos } from '@/lib/video-search'
 
 export async function POST(request: NextRequest) {
   try {
@@ -84,8 +84,8 @@ export async function POST(request: NextRequest) {
     // Search for educational videos
     let videos = []
     try {
-      const searchQuery = `${vehicleYear} ${vehicleMake} ${vehicleModel} ${description.slice(0, 50)}`
-      videos = await searchVideos(searchQuery, 5)
+      const vehicleInfo = { year: vehicleYear, make: vehicleMake, model: vehicleModel }
+      videos = await findEducationalVideos(diagnosis.diagnosis, [description], vehicleInfo)
     } catch (error) {
       console.error('[v0] Video search failed:', error)
     }
