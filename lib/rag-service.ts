@@ -21,8 +21,10 @@ export async function buildDiagnosticContext(
     const supabase = await createClient()
 
     // Generate embedding for the symptoms using Gemini
-    const model = genAI.getGenerativeModel({ model: 'text-embedding-004' })
-    const embeddingResult = await model.embedContent(symptoms)
+    const embeddingModel = genAI.getGenerativeModel({ 
+      model: 'embedding-001'
+    })
+    const embeddingResult = await embeddingModel.embedContent(symptoms)
     const embedding = embeddingResult.embedding.values
 
     // Search for relevant repair knowledge using vector similarity
@@ -70,7 +72,9 @@ export async function generateDiagnosis(
     const context = await buildDiagnosticContext(symptoms, vehicleInfo)
     console.log('[v0 RAG] Context retrieved, length:', context.length)
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' })
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-1.5-flash'
+    })
 
     const vehicleStr = vehicleInfo
       ? `${vehicleInfo.year} ${vehicleInfo.make} ${vehicleInfo.model}`
