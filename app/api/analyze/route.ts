@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { generateDiagnosis } from '@/lib/rag-service'
 import { findEducationalVideos } from '@/lib/video-search'
 
+// Pocket Mechanic AI Analysis API - v1.0.1
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()

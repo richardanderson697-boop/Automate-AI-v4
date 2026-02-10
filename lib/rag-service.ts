@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { createClient } from '@/lib/supabase/server'
 
+// RAG Service v1.0.1 - Using Gemini 1.5 Flash and embedding-001
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
 
 interface DiagnosisResult {
