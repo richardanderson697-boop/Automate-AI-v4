@@ -90,10 +90,13 @@ export async function POST(request: NextRequest) {
       console.error('[v0] Video search failed:', error)
     }
 
-    // Save analysis to database
+    // Save analysis to database (using customer_diagnostic_requests table)
     const { data: savedAnalysis, error: dbError } = await supabase
-      .from('vehicle_analyses')
+      .from('customer_diagnostic_requests')
       .insert({
+        customer_name: 'Consumer',
+        customer_email: 'pending@payment.com',
+        customer_phone: '',
         vehicle_year: vehicleYear,
         vehicle_make: vehicleMake,
         vehicle_model: vehicleModel,
@@ -108,9 +111,8 @@ export async function POST(request: NextRequest) {
           videos: videos,
         },
         ai_confidence: diagnosis.confidence,
-        estimated_cost: diagnosis.estimatedCost,
-        payment_status: 'pending',
-        status: 'completed',
+        estimated_total: diagnosis.estimatedCost,
+        status: 'pending_payment',
       })
       .select()
       .single()

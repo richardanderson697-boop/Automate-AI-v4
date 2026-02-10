@@ -19,12 +19,12 @@ interface Analysis {
     confidence: number
     videos: Array<{ title: string; videoId: string; thumbnail: string }>
   }
-  payment_status: string
+  status: string
 }
 
 export default function ResultsClient({ analysis }: { analysis: Analysis }) {
   const { ai_diagnosis } = analysis
-  const isPaid = analysis.payment_status === 'completed'
+  const isPaid = analysis.status === 'completed' || analysis.status === 'reviewed'
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
