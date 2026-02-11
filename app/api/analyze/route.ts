@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
         },
         ai_confidence: diagnosis.confidence,
         estimated_total: diagnosis.estimatedCost,
-        status: 'pending_payment',
+        status: 'pending_review',
       })
       .select()
       .single()
