@@ -23,7 +23,7 @@ export async function buildDiagnosticContext(
 
     // Generate embedding for the symptoms using Gemini
     const embeddingModel = genAI.getGenerativeModel({ 
-      model: 'embedding-001'
+      model: 'models/embedding-001'
     })
     const embeddingResult = await embeddingModel.embedContent(symptoms)
     const embedding = embeddingResult.embedding.values
@@ -74,7 +74,7 @@ export async function generateDiagnosis(
     console.log('[v0 RAG] Context retrieved, length:', context.length)
 
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-1.5-flash'
+      model: 'models/gemini-1.5-flash'
     })
 
     const vehicleStr = vehicleInfo

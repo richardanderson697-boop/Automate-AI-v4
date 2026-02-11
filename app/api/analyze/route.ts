@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { generateDiagnosis } from '@/lib/rag-service'
 import { findEducationalVideos } from '@/lib/video-search'
 
@@ -22,7 +22,11 @@ export async function POST(request: NextRequest) {
     const imageFiles = images.filter(f => f instanceof File) as File[]
     const audioFile = formData.get('audio') as File | null
     
-    const supabase = await createClient()
+    // Use service role to bypass RLS for anonymous submissions
+    const supabase = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
 
     // Upload files to Supabase Storage
     const imageUrls: string[] = []
